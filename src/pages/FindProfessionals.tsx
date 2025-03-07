@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Search, Filter, ArrowUpDown, MapPin, Star } from "lucide-react";
+import { Search, Filter, ArrowUpDown, MapPin, Star, Clock } from "lucide-react";
 import Header from "@/components/Header";
 import AnimatedButton from "@/components/AnimatedButton";
 import ProfessionalCard from "@/components/ProfessionalCard";
