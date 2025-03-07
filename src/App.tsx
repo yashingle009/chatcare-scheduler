@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ProfessionalsByCategory from "./pages/ProfessionalsByCategory";
 import FindProfessionals from "./pages/FindProfessionals";
+import ProfessionalDetail from "./pages/ProfessionalDetail";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/professionals/category" element={<ProfessionalsByCategory />} />
           <Route path="/professionals" element={<FindProfessionals />} />
+          <Route path="/professional/:professionalId" element={<ProfessionalDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

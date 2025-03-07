@@ -1,41 +1,137 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Star, MessageCircle, Video, Phone, Calendar } from "lucide-react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { format, addDays } from "date-fns";
+import { 
+  Star, 
+  MapPin, 
+  Award, 
+  Calendar, 
+  Clock, 
+  CheckCircle, 
+  Languages, 
+  User, 
+  Video, 
+  Phone, 
+  MessageSquare, 
+  ChevronLeft, 
+  Briefcase,
+  GraduationCap,
+  BadgeCheck
+} from "lucide-react";
+import { toast } from "sonner";
 import Header from "@/components/Header";
-import ProfilePanel from "@/components/ProfilePanel";
+import TimeSlot from "@/components/TimeSlot";
 import AnimatedButton from "@/components/AnimatedButton";
-import { mockProfessionals } from "@/lib/supabase";
+import { 
+  mockProfessionals, 
+  mockTimeSlots, 
+  mockCategories, 
+  mockReviews 
+} from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const ProfessionalDetail = () => {
-  const { id } = useParams();
   const navigate = useNavigate();
+  const { professionalId } = useParams();
+  const location = useLocation();
   
-  const professionalId = Number(id);
-  const professional = mockProfessionals.find(p => p.id === professionalId);
-  
+  // Get professional data from location state or fetch based on ID
+  const [professional, setProfessional] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
+  const [selectedService, setSelectedService] = useState(null);
+  const [consultationType, setConsultationType] = useState("video");
+
+  useEffect(() => {
+    // Fetch professional data
+    const id = parseInt(professionalId);
+    const prof = mockProfessionals.find(p => p.id === id);
+    
+    if (prof) {
+      setProfessional(prof);
+      setSelectedService(prof.services[0]);
+      
+      // Fetch reviews for this professional
+      const profReviews = mockReviews.filter(r => r.professionalId === id);
+      setReviews(profReviews);
+    } else {
+      // No professional found with that ID
+      toast.error("Professional not found");
+      navigate("/professionals");
+    }
+  }, [professionalId, navigate]);
+
+  // Handle date selection
+  const handleDateSelect = (date) => {
+    setSelectedDate(date);
+    setSelectedTimeSlot(null); // Reset time slot when date changes
+  };
+
+  // Handle time slot selection
+  const handleTimeSlotSelect = (time) => {
+    setSelectedTimeSlot(time);
+  };
+
+  // Handle service selection
+  const handleServiceSelect = (service) => {
+    setSelectedService(service);
+  };
+
+  // Handle consultation type selection
+  const handleConsultationTypeChange = (value) => {
+    setConsultationType(value);
+  };
+
+  // Calculate total price
+  const calculateTotal = () => {
+    if (!selectedService) return 0;
+    return selectedService.price;
+  };
+
+  // Handle booking submission
+  const handleBookAppointment = () => {
+    if (!selectedService || !selectedDate || !selectedTimeSlot) {
+      toast.error("Please select a service, date, and time slot");
+      return;
+    }
+
+    // In a real app, this would make an API call to book the appointment
+    toast.success("Appointment booked successfully!");
+    
+    // Show details of the booking
+    toast(`Booked: ${selectedService.name} with ${professional.name} on ${format(selectedDate, 'PPP')} at ${selectedTimeSlot}`);
+    
+    // Mock navigation to a booking confirmation page
+    // navigate("/booking-confirmation");
+  };
+
+  // Get the category name for this professional
+  const getCategoryName = (categoryId) => {
+    const category = mockCategories.find(c => c.id === categoryId);
+    return category ? category.name : "";
+  };
+
   if (!professional) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Professional Not Found</h1>
-          <p className="text-muted-foreground mb-6">
-            The professional you're looking for doesn't exist or has been removed.
-          </p>
-          <button 
-            onClick={() => navigate(-1)}
-            className="text-primary hover:underline flex items-center justify-center mx-auto"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Go Back
-          </button>
-        </div>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-28 pb-16 px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <p className="text-muted-foreground">Loading professional profile...</p>
+          </div>
+        </main>
       </div>
     );
   }
-  
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -43,263 +139,337 @@ const ProfessionalDetail = () => {
       <main className="pt-28 pb-16 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.button
+            className="flex items-center text-sm text-muted-foreground mb-6 hover:text-foreground"
             onClick={() => navigate(-1)}
-            className="flex items-center text-muted-foreground mb-8 hover:text-foreground focus-ring rounded-full px-2 py-1"
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+            transition={{ duration: 0.3 }}
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Search
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            <span>Back to search results</span>
           </motion.button>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="md:col-span-1">
-              <ProfilePanel
-                professional={professional}
-                onBookNow={() => navigate(`/booking/${professional.id}`)}
-              />
-            </div>
-            
-            <div className="md:col-span-2 space-y-8">
-              <motion.div
-                className="bg-white rounded-2xl border border-border overflow-hidden"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1], delay: 0.1 }}
-              >
-                <div className="p-6">
-                  <h2 className="text-xl font-medium mb-4">Consultation Options</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Professional Profile Section (Left) */}
+            <motion.div 
+              className="lg:col-span-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              {/* Header with avatar and basic info */}
+              <div className="bg-white rounded-2xl p-6 md:p-8 border border-border mb-8">
+                <div className="flex flex-col md:flex-row md:items-start">
+                  <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-4 md:mb-0 md:mr-6 bg-secondary flex-shrink-0">
+                    <img 
+                      src={professional.avatar} 
+                      alt={professional.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="rounded-xl border border-border p-4 hover:border-primary/60 transition-all cursor-pointer">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3">
-                        <Video className="h-5 w-5" />
-                      </div>
-                      <h3 className="text-base font-medium mb-1">Video Call</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Face-to-face consultation via video
-                      </p>
+                  <div className="flex-1">
+                    <div className="flex items-center flex-wrap">
+                      <h1 className="text-2xl md:text-3xl font-bold mr-2">{professional.name}</h1>
+                      {professional.verifiedStatus && (
+                        <BadgeCheck className="h-5 w-5 text-primary" />
+                      )}
                     </div>
                     
-                    <div className="rounded-xl border border-border p-4 hover:border-primary/60 transition-all cursor-pointer">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3">
-                        <Phone className="h-5 w-5" />
-                      </div>
-                      <h3 className="text-base font-medium mb-1">Voice Call</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Audio-only consultation
-                      </p>
+                    <div className="flex items-center mt-1 mb-2">
+                      <p className="text-lg text-muted-foreground">{professional.title}</p>
+                      <span className="mx-2 text-muted-foreground">•</span>
+                      <span className="text-sm text-muted-foreground">{getCategoryName(professional.categoryId)}</span>
                     </div>
                     
-                    <div className="rounded-xl border border-border p-4 hover:border-primary/60 transition-all cursor-pointer">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3">
-                        <MessageCircle className="h-5 w-5" />
+                    <div className="flex items-center mb-3">
+                      <Star className="h-5 w-5 text-yellow-500 mr-1" fill="currentColor" />
+                      <span className="font-medium mr-1">{professional.rating}</span>
+                      <span className="text-muted-foreground">({professional.reviewCount} reviews)</span>
+                    </div>
+                    
+                    <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
+                      <div className="flex items-center text-muted-foreground">
+                        <Briefcase className="h-4 w-4 mr-1" />
+                        <span className="text-sm">{professional.experience}</span>
                       </div>
-                      <h3 className="text-base font-medium mb-1">Chat</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Text-based consultation
-                      </p>
+                      
+                      <div className="flex items-center text-muted-foreground">
+                        <MapPin className="h-4 w-4 mr-1" />
+                        <span className="text-sm">{professional.location}</span>
+                      </div>
+                      
+                      <div className="flex items-center text-muted-foreground">
+                        <Languages className="h-4 w-4 mr-1" />
+                        <span className="text-sm">{professional.languages.join(", ")}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Tabs for About, Services, Reviews */}
+              <Tabs defaultValue="about" className="mb-8">
+                <TabsList className="mb-6">
+                  <TabsTrigger value="about">About</TabsTrigger>
+                  <TabsTrigger value="services">Services</TabsTrigger>
+                  <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="about" className="space-y-6">
+                  {/* Bio */}
+                  <div className="bg-white rounded-xl p-6 border border-border">
+                    <h2 className="text-xl font-semibold mb-4">Bio</h2>
+                    <p className="text-muted-foreground">{professional.bio}</p>
+                  </div>
+                  
+                  {/* Specializations */}
+                  <div className="bg-white rounded-xl p-6 border border-border">
+                    <h2 className="text-xl font-semibold mb-4">Specializations</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {professional.specializations.map((spec, index) => (
+                        <span 
+                          key={index} 
+                          className="px-3 py-1.5 bg-secondary/50 text-sm rounded-full"
+                        >
+                          {spec}
+                        </span>
+                      ))}
                     </div>
                   </div>
                   
-                  <div className="mt-6 pt-6 border-t border-border">
-                    <h3 className="text-base font-medium mb-3">Duration & Pricing</h3>
-                    
+                  {/* Education */}
+                  <div className="bg-white rounded-xl p-6 border border-border">
+                    <h2 className="text-xl font-semibold mb-4">Education</h2>
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary/60 transition-all cursor-pointer">
-                        <div>
-                          <h4 className="font-medium">30 Minutes</h4>
-                          <p className="text-sm text-muted-foreground">Brief consultation</p>
+                      {professional.education.split('\n').map((education, index) => (
+                        <div key={index} className="flex items-start">
+                          <GraduationCap className="h-5 w-5 text-muted-foreground mr-2 mt-0.5" />
+                          <span>{education}</span>
                         </div>
-                        <div className="text-right">
-                          <p className="font-medium">${Math.round(professional.price * 0.5)}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-primary bg-primary/5 cursor-pointer">
-                        <div>
-                          <h4 className="font-medium">60 Minutes</h4>
-                          <p className="text-sm text-muted-foreground">Standard consultation</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">${professional.price}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary/60 transition-all cursor-pointer">
-                        <div>
-                          <h4 className="font-medium">90 Minutes</h4>
-                          <p className="text-sm text-muted-foreground">Extended consultation</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">${Math.round(professional.price * 1.5)}</p>
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   </div>
-                </div>
-              </motion.div>
-              
-              <motion.div
-                className="bg-white rounded-2xl border border-border overflow-hidden"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1], delay: 0.2 }}
-              >
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-medium">Reviews & Ratings</h2>
-                    <div className="flex items-center">
-                      <Star className="h-4 w-4 text-yellow-500 mr-1" fill="currentColor" />
-                      <span className="font-medium">{professional.rating}</span>
-                      <span className="text-muted-foreground ml-1">({professional.reviewCount})</span>
-                    </div>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <div className="flex items-center mb-2">
-                      <div className="w-28 text-sm">5 stars</div>
-                      <div className="flex-1 bg-secondary rounded-full h-2">
-                        <div className="bg-yellow-500 h-2 rounded-full" style={{ width: "70%" }}></div>
+                </TabsContent>
+                
+                <TabsContent value="services" className="space-y-6">
+                  {professional.services.map((service) => (
+                    <div 
+                      key={service.id}
+                      className={cn(
+                        "bg-white rounded-xl p-6 border transition-colors",
+                        selectedService?.id === service.id 
+                          ? "border-primary/50 ring-1 ring-primary/20" 
+                          : "border-border hover:border-primary/30"
+                      )}
+                      onClick={() => handleServiceSelect(service)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="text-lg font-medium">{service.name}</h3>
+                        <div className="text-right">
+                          <p className="text-xl font-semibold">${service.price}</p>
+                          <p className="text-sm text-muted-foreground">{service.duration}</p>
+                        </div>
                       </div>
-                      <div className="ml-3 text-sm text-muted-foreground">70%</div>
+                      <p className="text-muted-foreground">{service.description}</p>
                     </div>
-                    <div className="flex items-center mb-2">
-                      <div className="w-28 text-sm">4 stars</div>
-                      <div className="flex-1 bg-secondary rounded-full h-2">
-                        <div className="bg-yellow-500 h-2 rounded-full" style={{ width: "20%" }}></div>
-                      </div>
-                      <div className="ml-3 text-sm text-muted-foreground">20%</div>
-                    </div>
-                    <div className="flex items-center mb-2">
-                      <div className="w-28 text-sm">3 stars</div>
-                      <div className="flex-1 bg-secondary rounded-full h-2">
-                        <div className="bg-yellow-500 h-2 rounded-full" style={{ width: "7%" }}></div>
-                      </div>
-                      <div className="ml-3 text-sm text-muted-foreground">7%</div>
-                    </div>
-                    <div className="flex items-center mb-2">
-                      <div className="w-28 text-sm">2 stars</div>
-                      <div className="flex-1 bg-secondary rounded-full h-2">
-                        <div className="bg-yellow-500 h-2 rounded-full" style={{ width: "2%" }}></div>
-                      </div>
-                      <div className="ml-3 text-sm text-muted-foreground">2%</div>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-28 text-sm">1 star</div>
-                      <div className="flex-1 bg-secondary rounded-full h-2">
-                        <div className="bg-yellow-500 h-2 rounded-full" style={{ width: "1%" }}></div>
-                      </div>
-                      <div className="ml-3 text-sm text-muted-foreground">1%</div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-5">
-                    <div className="pb-5 border-b border-border">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 rounded-full bg-secondary overflow-hidden mr-3">
+                  ))}
+                </TabsContent>
+                
+                <TabsContent value="reviews" className="space-y-6">
+                  {reviews.length > 0 ? (
+                    reviews.map((review) => (
+                      <div 
+                        key={review.id}
+                        className="bg-white rounded-xl p-6 border border-border"
+                      >
+                        <div className="flex items-start">
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary mr-3">
                             <img 
-                              src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.0.3" 
-                              alt="Client"
-                              className="h-full w-full object-cover"
+                              src={review.avatar} 
+                              alt={review.author} 
+                              className="w-full h-full object-cover"
                             />
                           </div>
-                          <div>
-                            <h4 className="font-medium">John Smith</h4>
-                            <p className="text-xs text-muted-foreground">2 weeks ago</p>
+                          
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <h3 className="font-medium">{review.author}</h3>
+                              <span className="text-sm text-muted-foreground">{review.date}</span>
+                            </div>
+                            
+                            <div className="flex items-center my-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star 
+                                  key={i}
+                                  className="h-4 w-4 mr-0.5" 
+                                  fill={i < review.rating ? "currentColor" : "none"}
+                                  color={i < review.rating ? "#f59e0b" : "#d1d5db"}
+                                />
+                              ))}
+                            </div>
+                            
+                            <p className="text-muted-foreground mt-2">{review.comment}</p>
                           </div>
-                        </div>
-                        <div className="flex">
-                          {[1, 2, 3, 4, 5].map(star => (
-                            <Star 
-                              key={star} 
-                              className={cn(
-                                "h-4 w-4",
-                                star <= 5 ? "text-yellow-500" : "text-secondary"
-                              )} 
-                              fill="currentColor" 
-                            />
-                          ))}
                         </div>
                       </div>
-                      <p className="text-sm">
-                        {professional.name} provided excellent guidance for my tax planning needs. 
-                        Very knowledgeable and helped me save a significant amount on my taxes.
-                        I would highly recommend!
-                      </p>
+                    ))
+                  ) : (
+                    <div className="text-center py-10">
+                      <p className="text-muted-foreground">No reviews yet</p>
                     </div>
-                    
-                    <div className="pb-5 border-b border-border">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 rounded-full bg-secondary overflow-hidden mr-3">
-                            <img 
-                              src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.0.3" 
-                              alt="Client"
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
-                          <div>
-                            <h4 className="font-medium">Sarah Johnson</h4>
-                            <p className="text-xs text-muted-foreground">1 month ago</p>
-                          </div>
-                        </div>
-                        <div className="flex">
-                          {[1, 2, 3, 4, 5].map(star => (
-                            <Star 
-                              key={star} 
-                              className={cn(
-                                "h-4 w-4",
-                                star <= 4 ? "text-yellow-500" : "text-secondary"
-                              )} 
-                              fill="currentColor" 
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-sm">
-                        Very professional and thorough. Answered all my questions and provided 
-                        clear guidance on how to proceed with my case. The consultation was 
-                        well worth the investment.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-5 text-center">
-                    <button className="text-primary hover:underline text-sm font-medium">
-                      View all {professional.reviewCount} reviews
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-              
-              <motion.div
-                className="bg-primary/10 rounded-2xl border border-primary/20 overflow-hidden"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1], delay: 0.3 }}
-              >
-                <div className="p-6">
-                  <div className="flex items-center mb-4">
-                    <Calendar className="h-5 w-5 text-primary mr-2" />
-                    <h2 className="text-xl font-medium">Ready to Book?</h2>
-                  </div>
-                  
-                  <p className="text-sm mb-5">
-                    Select your preferred consultation time and get expert guidance from {professional.name}.
-                  </p>
-                  
-                  <AnimatedButton
-                    onClick={() => navigate(`/booking/${professional.id}`)}
-                    className="w-full"
+                  )}
+                </TabsContent>
+              </Tabs>
+            </motion.div>
+            
+            {/* Booking Section (Right) */}
+            <motion.div 
+              className="lg:col-span-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              <div className="bg-white rounded-2xl p-6 border border-border sticky top-36">
+                <h2 className="text-xl font-semibold mb-5">Book an Appointment</h2>
+                
+                {/* Service selection (mobile only - shown as summary on desktop) */}
+                <div className="lg:hidden mb-6">
+                  <label className="block text-sm font-medium mb-2">Select Service</label>
+                  <select 
+                    className="w-full p-2 border border-input rounded-md"
+                    value={selectedService?.id}
+                    onChange={(e) => {
+                      const serviceId = parseInt(e.target.value);
+                      const service = professional.services.find(s => s.id === serviceId);
+                      handleServiceSelect(service);
+                    }}
                   >
-                    Book a Consultation
-                  </AnimatedButton>
+                    {professional.services.map((service) => (
+                      <option key={service.id} value={service.id}>
+                        {service.name} - ${service.price} ({service.duration})
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              </motion.div>
-            </div>
+                
+                {/* Selected service summary (desktop) */}
+                <div className="hidden lg:block mb-6">
+                  <label className="block text-sm font-medium mb-2">Selected Service</label>
+                  {selectedService && (
+                    <div className="p-3 bg-secondary/30 rounded-lg">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">{selectedService.name}</p>
+                          <p className="text-sm text-muted-foreground">{selectedService.duration}</p>
+                        </div>
+                        <p className="font-semibold">${selectedService.price}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Date picker */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium mb-2">Select Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        className="w-full flex items-center justify-between p-3 rounded-lg border border-input bg-background hover:bg-secondary/20 transition-colors"
+                      >
+                        <span>{format(selectedDate, 'MMMM d, yyyy')}</span>
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={handleDateSelect}
+                        initialFocus
+                        disabled={(date) => date < new Date()}
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                
+                {/* Time slots */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium mb-2">Select Time</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {mockTimeSlots.map((slot) => (
+                      <TimeSlot
+                        key={slot.id}
+                        time={slot.time}
+                        available={slot.available}
+                        selected={selectedTimeSlot === slot.time}
+                        onSelect={handleTimeSlotSelect}
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Consultation type */}
+                <div className="mb-8">
+                  <label className="block text-sm font-medium mb-2">Consultation Method</label>
+                  <RadioGroup 
+                    value={consultationType} 
+                    onValueChange={handleConsultationTypeChange}
+                    className="flex flex-col space-y-1"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="video" id="video" />
+                      <Label htmlFor="video" className="flex items-center">
+                        <Video className="h-4 w-4 mr-2" />
+                        <span>Video Call</span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="audio" id="audio" />
+                      <Label htmlFor="audio" className="flex items-center">
+                        <Phone className="h-4 w-4 mr-2" />
+                        <span>Audio Call</span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="chat" id="chat" />
+                      <Label htmlFor="chat" className="flex items-center">
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        <span>Chat</span>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                
+                {/* Price summary */}
+                <div className="pt-4 mb-6 border-t border-border">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-muted-foreground">Consultation Fee</span>
+                    <span>${selectedService?.price || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center font-semibold text-lg">
+                    <span>Total</span>
+                    <span>${calculateTotal()}</span>
+                  </div>
+                </div>
+                
+                {/* Book button */}
+                <AnimatedButton
+                  onClick={handleBookAppointment}
+                  className="w-full"
+                  disabled={!selectedService || !selectedDate || !selectedTimeSlot}
+                >
+                  Book Appointment
+                </AnimatedButton>
+                
+                <p className="text-xs text-center text-muted-foreground mt-3">
+                  You won't be charged until after the consultation
+                </p>
+              </div>
+            </motion.div>
           </div>
         </div>
       </main>

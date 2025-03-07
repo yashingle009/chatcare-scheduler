@@ -42,9 +42,7 @@ const FindProfessionals = () => {
   
   // Handle professional card click
   const handleProfessionalClick = (professionalId) => {
-    navigate(`/professional/${professionalId}`, { 
-      state: { professionalId } 
-    });
+    navigate(`/professional/${professionalId}`);
   };
   
   // Filter and sort professionals
