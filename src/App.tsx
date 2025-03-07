@@ -23,7 +23,7 @@ const App = () => (
           <Route path="/professionals/category/:categoryId" element={<ProfessionalsByCategory />} />
           <Route path="/professionals" element={<FindProfessionals />} />
           <Route path="/professional/:professionalId" element={<ProfessionalDetail />} />
-          <Route path="/profile" element={<ProfessionalDetail professionalId={1} />} />
+          <Route path="/profile" element={<ProfessionalDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
