@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, MapPin, Star, Filter, Clock } from "lucide-react";
 import Header from "@/components/Header";
 import AnimatedButton from "@/components/AnimatedButton";
@@ -11,11 +11,12 @@ import ProfessionalCard from "@/components/ProfessionalCard";
 const ProfessionalsByCategory = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const params = useParams();
   const [professionals, setProfessionals] = useState([]);
   const [category, setCategory] = useState(null);
   
-  // Get the category ID from the location state
-  const categoryId = location.state?.categoryId;
+  // Get the category ID from the params or from the location state
+  const categoryId = params.categoryId ? parseInt(params.categoryId) : location.state?.categoryId;
   
   useEffect(() => {
     if (categoryId) {

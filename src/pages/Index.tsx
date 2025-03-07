@@ -1,24 +1,31 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Calendar, MessageCircle, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import CategoryCard from "@/components/CategoryCard";
 import AnimatedButton from "@/components/AnimatedButton";
+import CategoryListModal from "@/components/CategoryListModal";
 import { mockCategories } from "@/lib/supabase";
 import { staggerContainer, staggerItems } from "@/utils/animations";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   
   const handleCategoryClick = (categoryId) => {
-    navigate("/professionals/category", { state: { categoryId } });
+    setCategoryModalOpen(true);
   };
   
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      
+      <CategoryListModal 
+        isOpen={categoryModalOpen} 
+        onClose={() => setCategoryModalOpen(false)} 
+      />
       
       <main className="pt-28 pb-16 px-6">
         <section className="max-w-6xl mx-auto mb-16 md:mb-24">
