@@ -12,8 +12,8 @@ import { staggerContainer, staggerItems } from "@/utils/animations";
 const Index = () => {
   const navigate = useNavigate();
   
-  const handleCategoryClick = (categoryId: number) => {
-    navigate("/professionals", { state: { categoryId } });
+  const handleCategoryClick = (categoryId) => {
+    navigate("/professionals/category", { state: { categoryId } });
   };
   
   return (

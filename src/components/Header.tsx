@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import { UserCircle2, Calendar, Home, Menu, X, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const Header: React.FC = () => {
+const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
