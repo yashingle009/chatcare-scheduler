@@ -29,7 +29,12 @@ const Header = () => {
     { name: "Profile", path: "/profile", icon: <UserCircle2 className="h-5 w-5" /> }
   ];
   
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path === "/profile" && location.pathname.startsWith("/profile")) {
+      return true;
+    }
+    return location.pathname === path;
+  };
   
   return (
     <>

@@ -20,9 +20,10 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/professionals/category" element={<ProfessionalsByCategory />} />
+          <Route path="/professionals/category/:categoryId" element={<ProfessionalsByCategory />} />
           <Route path="/professionals" element={<FindProfessionals />} />
           <Route path="/professional/:professionalId" element={<ProfessionalDetail />} />
+          <Route path="/profile" element={<ProfessionalDetail professionalId={1} />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
