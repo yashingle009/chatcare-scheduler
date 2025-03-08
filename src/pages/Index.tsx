@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Calendar, MessageCircle, Award } from "lucide-react";
@@ -9,10 +8,12 @@ import AnimatedButton from "@/components/AnimatedButton";
 import CategoryListModal from "@/components/CategoryListModal";
 import { mockCategories } from "@/lib/supabase";
 import { staggerContainer, staggerItems } from "@/utils/animations";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const navigate = useNavigate();
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const { user } = useAuth();
   
   const handleCategoryClick = (categoryId) => {
     setCategoryModalOpen(true);
@@ -63,13 +64,23 @@ const Index = () => {
                 Find a Professional
               </AnimatedButton>
               
-              <AnimatedButton 
-                variant="outline"
-                size="lg"
-                onClick={() => navigate("/profile")}
-              >
-                Learn More
-              </AnimatedButton>
+              {user ? (
+                <AnimatedButton 
+                  variant="outline"
+                  size="lg"
+                  onClick={() => navigate("/profile")}
+                >
+                  View Profile
+                </AnimatedButton>
+              ) : (
+                <AnimatedButton 
+                  variant="outline"
+                  size="lg"
+                  onClick={() => navigate("/auth")}
+                >
+                  Sign In / Register
+                </AnimatedButton>
+              )}
             </div>
           </motion.div>
         </section>
@@ -181,12 +192,21 @@ const Index = () => {
                 </p>
               </div>
               <div className="md:flex-initial">
-                <AnimatedButton
-                  onClick={() => navigate("/professionals")}
-                  size="lg"
-                >
-                  Find a Professional
-                </AnimatedButton>
+                {user ? (
+                  <AnimatedButton
+                    onClick={() => navigate("/profile")}
+                    size="lg"
+                  >
+                    View Your Profile
+                  </AnimatedButton>
+                ) : (
+                  <AnimatedButton
+                    onClick={() => navigate("/professionals")}
+                    size="lg"
+                  >
+                    Find a Professional
+                  </AnimatedButton>
+                )}
               </div>
             </div>
           </motion.div>
