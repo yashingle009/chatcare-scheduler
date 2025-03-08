@@ -24,50 +24,129 @@ import { toast } from "sonner";
 import Header from "@/components/Header";
 import TimeSlot from "@/components/TimeSlot";
 import AnimatedButton from "@/components/AnimatedButton";
-import { 
-  mockProfessionals, 
-  mockTimeSlots, 
-  mockCategories, 
-  mockReviews 
-} from "@/lib/supabase";
+import { mockCategories, mockReviews, mockTimeSlots } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProfessionalDetail = () => {
   const navigate = useNavigate();
   const { professionalId } = useParams();
   const location = useLocation();
   
-  // Get professional data from location state or fetch based on ID
+  // Professional data state
   const [professional, setProfessional] = useState(null);
+  const [profileData, setProfileData] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Booking state
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
   const [consultationType, setConsultationType] = useState("video");
 
   useEffect(() => {
-    // Fetch professional data
-    const id = parseInt(professionalId);
-    const prof = mockProfessionals.find(p => p.id === id);
-    
-    if (prof) {
-      setProfessional(prof);
-      setSelectedService(prof.services[0]);
+    fetchProfessionalData();
+  }, [professionalId]);
+
+  const fetchProfessionalData = async () => {
+    try {
+      setLoading(true);
       
-      // Fetch reviews for this professional
-      const profReviews = mockReviews.filter(r => r.professionalId === id);
-      setReviews(profReviews);
-    } else {
-      // No professional found with that ID
-      toast.error("Professional not found");
+      if (!professionalId) {
+        toast.error("Professional ID is missing");
+        navigate("/professionals");
+        return;
+      }
+      
+      // Fetch expert data with related profile data
+      const { data: expertData, error: expertError } = await supabase
+        .from('experts')
+        .select(`
+          *,
+          profiles:id (first_name, last_name, avatar_url, bio)
+        `)
+        .eq('id', professionalId)
+        .single();
+      
+      if (expertError) {
+        console.error("Error fetching professional data:", expertError);
+        toast.error("Failed to load professional information");
+        navigate("/professionals");
+        return;
+      }
+      
+      // Set profile data
+      const profileInfo = expertData.profiles;
+      setProfileData(profileInfo);
+      
+      // Transform expert data for component
+      const professionalData = {
+        id: expertData.id,
+        name: `${profileInfo.first_name || ''} ${profileInfo.last_name || ''}`.trim() || 'Unnamed Professional',
+        title: expertData.title || "Professional Consultant",
+        avatar: profileInfo.avatar_url || "/placeholder.svg",
+        rating: 4.8, // Placeholder
+        reviewCount: 24, // Placeholder
+        experience: expertData.experience || "5+ years experience",
+        bio: profileInfo.bio || expertData.bio || "No bio available",
+        location: expertData.location || "Remote",
+        languages: expertData.languages || ["English"],
+        specializations: expertData.specializations || ["Consulting"],
+        education: expertData.education || "Master's Degree in Business Administration",
+        verifiedStatus: expertData.verified_status || false,
+        categoryId: expertData.category_id,
+      };
+      
+      setProfessional(professionalData);
+      
+      // Set mock services for now
+      setServices([
+        {
+          id: 1,
+          name: "Initial Consultation",
+          price: expertData.price || 100,
+          duration: "60 minutes",
+          description: "Comprehensive evaluation to understand your specific needs and goals."
+        },
+        {
+          id: 2,
+          name: "Follow-up Session",
+          price: (expertData.price * 0.8) || 80,
+          duration: "45 minutes",
+          description: "Review progress and make adjustments to your personalized plan."
+        },
+        {
+          id: 3,
+          name: "Premium Consultation Package",
+          price: (expertData.price * 2.5) || 250,
+          duration: "3 x 60 minutes",
+          description: "Complete consultation package with three sessions and email support."
+        }
+      ]);
+      
+      // Set default selected service
+      if (services.length > 0) {
+        setSelectedService(services[0]);
+      }
+      
+      // Fetch reviews - using mock data for now
+      const professionalReviews = mockReviews.filter(r => r.professionalId === parseInt(professionalId));
+      setReviews(professionalReviews);
+    } catch (error) {
+      console.error("Error in fetching professional:", error);
+      toast.error("Failed to load professional details");
       navigate("/professionals");
+    } finally {
+      setLoading(false);
     }
-  }, [professionalId, navigate]);
+  };
 
   // Handle date selection
   const handleDateSelect = (date) => {
@@ -108,9 +187,6 @@ const ProfessionalDetail = () => {
     
     // Show details of the booking
     toast(`Booked: ${selectedService.name} with ${professional.name} on ${format(selectedDate, 'PPP')} at ${selectedTimeSlot}`);
-    
-    // Mock navigation to a booking confirmation page
-    // navigate("/booking-confirmation");
   };
 
   // Get the category name for this professional
@@ -119,13 +195,33 @@ const ProfessionalDetail = () => {
     return category ? category.name : "";
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-28 pb-16 px-6">
+          <div className="max-w-4xl mx-auto flex justify-center items-center py-12">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mr-3"></div>
+            <p>Loading professional profile...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   if (!professional) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <main className="pt-28 pb-16 px-6">
           <div className="max-w-4xl mx-auto text-center">
-            <p className="text-muted-foreground">Loading professional profile...</p>
+            <p className="text-muted-foreground">Professional not found</p>
+            <AnimatedButton
+              onClick={() => navigate("/professionals")}
+              className="mt-4"
+            >
+              Browse Professionals
+            </AnimatedButton>
           </div>
         </main>
       </div>
@@ -253,7 +349,7 @@ const ProfessionalDetail = () => {
                 </TabsContent>
                 
                 <TabsContent value="services" className="space-y-6">
-                  {professional.services.map((service) => (
+                  {services.map((service) => (
                     <div 
                       key={service.id}
                       className={cn(
@@ -343,11 +439,11 @@ const ProfessionalDetail = () => {
                     value={selectedService?.id}
                     onChange={(e) => {
                       const serviceId = parseInt(e.target.value);
-                      const service = professional.services.find(s => s.id === serviceId);
+                      const service = services.find(s => s.id === serviceId);
                       handleServiceSelect(service);
                     }}
                   >
-                    {professional.services.map((service) => (
+                    {services.map((service) => (
                       <option key={service.id} value={service.id}>
                         {service.name} - ${service.price} ({service.duration})
                       </option>

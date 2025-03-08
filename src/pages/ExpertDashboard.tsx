@@ -10,48 +10,119 @@ import AppointmentCard from "@/components/AppointmentCard";
 import RequestCard from "@/components/RequestCard";
 import ReviewCard from "@/components/ReviewCard";
 import StatCard from "@/components/StatCard";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const ExpertDashboard = () => {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
+  const [loading, setLoading] = useState(true);
   
-  const [appointments] = useState([
-    { time: "10:00 AM", client: "Emily Thompson", type: "Video Call" },
-    { time: "2:30 PM", client: "Sarah Williams", type: "In Person" },
-    { time: "4:00 PM", client: "James Chen", type: "Phone Call" }
-  ]);
-  
-  const [pendingRequests] = useState([
-    { client: "Michael Brown", type: "Business Strategy", time: "Tomorrow, 11:00 AM" },
-    { client: "Lisa Anderson", type: "Consultation", time: "Mar 1, 2:00 PM" }
-  ]);
-  
-  const [reviews] = useState([
-    {
-      name: "Emma Watson",
-      rating: 5,
-      comment: "Exceptional insights and practical advice. Dr. Mitchell helped transform our business strategy.",
-      date: "2 days ago"
-    },
-    {
-      name: "David Clark",
-      rating: 5,
-      comment: "Brilliant consultant with deep industry knowledge. Highly recommended!",
-      date: "1 week ago"
-    }
-  ]);
+  // State for expert-related data
+  const [expertData, setExpertData] = useState(null);
+  const [appointments, setAppointments] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [stats, setStats] = useState({
+    totalAppointments: 0,
+    totalEarnings: 0,
+    averageRating: 0,
+    nextAppointment: null
+  });
 
   useEffect(() => {
     // Redirect if not an expert
     if (profile && profile.user_type !== "expert") {
       navigate("/");
+      return;
     }
-  }, [profile, navigate]);
+
+    // Fetch expert data if authenticated
+    if (user) {
+      fetchExpertData();
+    }
+  }, [profile, navigate, user]);
+
+  const fetchExpertData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch expert profile data
+      const { data: expertData, error: expertError } = await supabase
+        .from("experts")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (expertError) {
+        console.error("Error fetching expert data:", expertError);
+        toast.error("Failed to load expert data");
+      } else {
+        setExpertData(expertData);
+      }
+
+      // For demonstration, using mock data but in a real app you'd fetch this from Supabase
+      // You would create tables for appointments, requests, reviews etc.
+      setAppointments([
+        { time: "10:00 AM", client: "Emily Thompson", type: "Video Call" },
+        { time: "2:30 PM", client: "Sarah Williams", type: "In Person" },
+        { time: "4:00 PM", client: "James Chen", type: "Phone Call" }
+      ]);
+      
+      setPendingRequests([
+        { client: "Michael Brown", type: "Business Strategy", time: "Tomorrow, 11:00 AM" },
+        { client: "Lisa Anderson", type: "Consultation", time: "Mar 1, 2:00 PM" }
+      ]);
+      
+      setReviews([
+        {
+          name: "Emma Watson",
+          rating: 5,
+          comment: "Exceptional insights and practical advice. Dr. Mitchell helped transform our business strategy.",
+          date: "2 days ago"
+        },
+        {
+          name: "David Clark",
+          rating: 5,
+          comment: "Brilliant consultant with deep industry knowledge. Highly recommended!",
+          date: "1 week ago"
+        }
+      ]);
+      
+      setStats({
+        totalAppointments: 247,
+        totalEarnings: 24850,
+        averageRating: 4.9,
+        nextAppointment: {
+          client: "Sarah Williams",
+          type: "Strategic Planning Session",
+          time: "Today at 2:30 PM"
+        }
+      });
+      
+    } catch (error) {
+      console.error("Error in fetching expert data:", error);
+      toast.error("An error occurred while loading dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!profile || profile.user_type !== "expert") {
     return null; // Don't render anything if not an expert (will redirect)
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p>Loading dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -78,12 +149,12 @@ const ExpertDashboard = () => {
                     {profile.first_name} {profile.last_name}
                   </h1>
                   <p className="text-muted-foreground">
-                    Professional Consultant
+                    {expertData?.title || "Professional Consultant"}
                   </p>
                 </div>
               </div>
               <div className="mt-4 md:mt-0 bg-primary/10 text-primary rounded-lg px-4 py-2">
-                <p>You have 3 new appointments today</p>
+                <p>You have {appointments.length} new appointments today</p>
               </div>
             </div>
           </motion.div>
@@ -92,7 +163,7 @@ const ExpertDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatCard 
               title="Total Appointments"
-              value="247"
+              value={stats.totalAppointments.toString()}
               subtitle="This month"
               details={[
                 { label: "Completed", value: "185", color: "text-green-600" },
@@ -103,14 +174,14 @@ const ExpertDashboard = () => {
             
             <StatCard 
               title="Total Earnings"
-              value="$24,850"
+              value={`$${stats.totalEarnings.toLocaleString()}`}
               subtitle="This month"
               chart={true}
             />
             
             <StatCard 
               title="Average Rating"
-              value="4.9"
+              value={stats.averageRating.toString()}
               subtitle="From 189 reviews"
               showStars={true}
             />
@@ -118,14 +189,18 @@ const ExpertDashboard = () => {
             <StatCard 
               title="Next Appointment"
               customContent={
-                <div>
-                  <p className="text-xl font-semibold">Sarah Williams</p>
-                  <p className="text-sm text-muted-foreground">Strategic Planning Session</p>
-                  <p className="text-sm text-primary mt-2 flex items-center">
-                    <Clock className="h-4 w-4 mr-2" />
-                    Today at 2:30 PM
-                  </p>
-                </div>
+                stats.nextAppointment ? (
+                  <div>
+                    <p className="text-xl font-semibold">{stats.nextAppointment.client}</p>
+                    <p className="text-sm text-muted-foreground">{stats.nextAppointment.type}</p>
+                    <p className="text-sm text-primary mt-2 flex items-center">
+                      <Clock className="h-4 w-4 mr-2" />
+                      {stats.nextAppointment.time}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">No upcoming appointments</p>
+                )
               }
             />
           </div>
@@ -140,16 +215,20 @@ const ExpertDashboard = () => {
             >
               <div className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Today's Appointments</h3>
-                <div className="space-y-4">
-                  {appointments.map((appointment, index) => (
-                    <AppointmentCard 
-                      key={index}
-                      time={appointment.time}
-                      client={appointment.client}
-                      type={appointment.type}
-                    />
-                  ))}
-                </div>
+                {appointments.length > 0 ? (
+                  <div className="space-y-4">
+                    {appointments.map((appointment, index) => (
+                      <AppointmentCard 
+                        key={index}
+                        time={appointment.time}
+                        client={appointment.client}
+                        type={appointment.type}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center py-6 text-muted-foreground">No appointments scheduled for today</p>
+                )}
               </div>
             </motion.div>
             
@@ -161,16 +240,20 @@ const ExpertDashboard = () => {
             >
               <div className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Pending Requests</h3>
-                <div className="space-y-4">
-                  {pendingRequests.map((request, index) => (
-                    <RequestCard 
-                      key={index}
-                      client={request.client}
-                      type={request.type}
-                      time={request.time}
-                    />
-                  ))}
-                </div>
+                {pendingRequests.length > 0 ? (
+                  <div className="space-y-4">
+                    {pendingRequests.map((request, index) => (
+                      <RequestCard 
+                        key={index}
+                        client={request.client}
+                        type={request.type}
+                        time={request.time}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center py-6 text-muted-foreground">No pending requests</p>
+                )}
               </div>
             </motion.div>
             
@@ -182,17 +265,21 @@ const ExpertDashboard = () => {
             >
               <div className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Recent Reviews</h3>
-                <div className="space-y-4">
-                  {reviews.map((review, index) => (
-                    <ReviewCard 
-                      key={index}
-                      name={review.name}
-                      rating={review.rating}
-                      comment={review.comment}
-                      date={review.date}
-                    />
-                  ))}
-                </div>
+                {reviews.length > 0 ? (
+                  <div className="space-y-4">
+                    {reviews.map((review, index) => (
+                      <ReviewCard 
+                        key={index}
+                        name={review.name}
+                        rating={review.rating}
+                        comment={review.comment}
+                        date={review.date}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center py-6 text-muted-foreground">No reviews yet</p>
+                )}
               </div>
             </motion.div>
           </div>

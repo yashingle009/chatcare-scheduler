@@ -6,8 +6,10 @@ import { Search, Filter, ArrowUpDown, MapPin, Star, Clock } from "lucide-react";
 import Header from "@/components/Header";
 import AnimatedButton from "@/components/AnimatedButton";
 import ProfessionalCard from "@/components/ProfessionalCard";
-import { mockCategories, mockProfessionals } from "@/lib/supabase";
+import { mockCategories } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const sortOptions = [
   { label: "Rating (High to Low)", value: "rating-desc" },
@@ -18,12 +20,65 @@ const sortOptions = [
 
 const FindProfessionals = () => {
   const navigate = useNavigate();
-  const [professionals, setProfessionals] = useState(mockProfessionals);
-  const [filteredProfessionals, setFilteredProfessionals] = useState(mockProfessionals);
+  const [professionals, setProfessionals] = useState([]);
+  const [filteredProfessionals, setFilteredProfessionals] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [sortBy, setSortBy] = useState("rating-desc");
   const [showAvailableTodayOnly, setShowAvailableTodayOnly] = useState(false);
+  const [loading, setLoading] = useState(true);
+  
+  // Fetch professionals on mount
+  useEffect(() => {
+    fetchProfessionals();
+  }, []);
+  
+  // Fetch professionals from Supabase
+  const fetchProfessionals = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch professionals with related profile data
+      const { data, error } = await supabase
+        .from('experts')
+        .select(`
+          *,
+          profiles:id (first_name, last_name, avatar_url)
+        `);
+
+      if (error) {
+        console.error("Error fetching professionals:", error);
+        toast.error("Failed to load professionals");
+        setProfessionals([]);
+        setFilteredProfessionals([]);
+      } else {
+        // Transform data for component
+        const transformedData = data.map(expert => ({
+          id: expert.id,
+          name: `${expert.profiles.first_name || ''} ${expert.profiles.last_name || ''}`.trim() || 'Unnamed Professional',
+          title: expert.title || "Professional Consultant",
+          avatar: expert.profiles.avatar_url || "/placeholder.svg",
+          rating: 4.5, // Placeholder, would be from a reviews table in real app
+          reviewCount: 15, // Placeholder, would be counted from reviews
+          experience: expert.experience || "5+ years",
+          price: expert.price || 100,
+          availableToday: true, // Placeholder, would be from availability data
+          location: expert.location || "Remote",
+          categoryId: expert.category_id
+        }));
+        
+        setProfessionals(transformedData);
+        setFilteredProfessionals(transformedData);
+      }
+    } catch (err) {
+      console.error("Error in fetching professionals:", err);
+      toast.error("An error occurred while loading professionals");
+      setProfessionals([]);
+      setFilteredProfessionals([]);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Handle search input change
   const handleSearchChange = (e) => {
@@ -47,7 +102,9 @@ const FindProfessionals = () => {
   
   // Filter and sort professionals
   useEffect(() => {
-    let result = [...mockProfessionals];
+    if (!professionals.length) return;
+    
+    let result = [...professionals];
     
     // Filter by search query
     if (searchQuery) {
@@ -87,7 +144,7 @@ const FindProfessionals = () => {
     });
     
     setFilteredProfessionals(result);
-  }, [searchQuery, selectedCategory, sortBy, showAvailableTodayOnly]);
+  }, [searchQuery, selectedCategory, sortBy, showAvailableTodayOnly, professionals]);
   
   return (
     <div className="min-h-screen bg-background">
@@ -163,7 +220,12 @@ const FindProfessionals = () => {
             </div>
           </motion.div>
           
-          {filteredProfessionals.length > 0 ? (
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+              <span className="ml-3">Loading professionals...</span>
+            </div>
+          ) : filteredProfessionals.length > 0 ? (
             <motion.div 
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               initial={{ opacity: 0 }}
