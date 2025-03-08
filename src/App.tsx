@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import ProfessionalsByCategory from "./pages/ProfessionalsByCategory";
 import FindProfessionals from "./pages/FindProfessionals";
 import ProfessionalDetail from "./pages/ProfessionalDetail";
+import ExpertDashboard from "./pages/ExpertDashboard";
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,11 @@ const App = () => (
             <Route path="/profile" element={
               <ProtectedRoute>
                 <ProfessionalDetail />
+              </ProtectedRoute>
+            } />
+            <Route path="/expert-dashboard" element={
+              <ProtectedRoute>
+                <ExpertDashboard />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

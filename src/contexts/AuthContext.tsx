@@ -132,7 +132,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data.user) {
         toast.success("Successfully signed in!");
-        navigate("/");
+        
+        // Fetch profile to determine where to redirect
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("user_type")
+          .eq("id", data.user.id)
+          .single();
+        
+        // Redirect based on user type
+        if (profileData && profileData.user_type === "expert") {
+          navigate("/expert-dashboard");
+        } else {
+          navigate("/");
+        }
       }
     } catch (error: any) {
       console.error("Error signing in:", error);
