@@ -1,15 +1,19 @@
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useLocation } from "react-router-dom";
-import { UserCircle2, Calendar, Home, Menu, X, Search, Settings, Edit, LogOut } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { UserCircle2, Calendar, Home, Menu, X, Search, Settings, Edit, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, profile, signOut } = useAuth();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -35,6 +39,10 @@ const Header = () => {
       return true;
     }
     return location.pathname === path;
+  };
+
+  const handleLogout = async () => {
+    await signOut();
   };
   
   return (
@@ -84,58 +92,77 @@ const Header = () => {
             ))}
             
             {/* Profile Popover */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className={cn(
-                    "ml-2 rounded-full transition-all duration-300 ease-apple",
-                    isActive("/profile") 
-                      ? "text-primary" 
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <UserCircle2 className="h-5 w-5" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-56 p-0" align="end">
-                <div className="p-2">
-                  <div className="p-4 border-b border-border">
-                    <h3 className="font-medium">Your Account</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Manage your profile and settings</p>
-                  </div>
-                  
+            {user ? (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className={cn(
+                      "ml-2 rounded-full transition-all duration-300 ease-apple",
+                      isActive("/profile") 
+                        ? "text-primary" 
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <UserCircle2 className="h-5 w-5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-0" align="end">
                   <div className="p-2">
-                    <Link to="/profile">
-                      <Button variant="ghost" className="w-full justify-start h-auto py-2 px-3 mb-1">
-                        <UserCircle2 className="mr-2 h-4 w-4" />
-                        View Profile
-                      </Button>
-                    </Link>
-                    <Link to="/profile/edit">
-                      <Button variant="ghost" className="w-full justify-start h-auto py-2 px-3 mb-1">
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit Profile
-                      </Button>
-                    </Link>
-                    <Link to="/settings">
-                      <Button variant="ghost" className="w-full justify-start h-auto py-2 px-3 mb-1">
-                        <Settings className="mr-2 h-4 w-4" />
-                        Settings
-                      </Button>
-                    </Link>
+                    <div className="p-4 border-b border-border">
+                      <h3 className="font-medium">
+                        {profile?.first_name ? `${profile.first_name} ${profile.last_name}` : 'Your Account'}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {profile?.user_type === 'expert' ? 'Expert' : 'User'} Account
+                      </p>
+                    </div>
                     
-                    <div className="h-px bg-border my-2"></div>
-                    
-                    <Button variant="ghost" className="w-full justify-start h-auto py-2 px-3 text-destructive hover:text-destructive hover:bg-destructive/10">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Logout
-                    </Button>
+                    <div className="p-2">
+                      <Link to="/profile">
+                        <Button variant="ghost" className="w-full justify-start h-auto py-2 px-3 mb-1">
+                          <UserCircle2 className="mr-2 h-4 w-4" />
+                          View Profile
+                        </Button>
+                      </Link>
+                      <Link to="/profile/edit">
+                        <Button variant="ghost" className="w-full justify-start h-auto py-2 px-3 mb-1">
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit Profile
+                        </Button>
+                      </Link>
+                      <Link to="/settings">
+                        <Button variant="ghost" className="w-full justify-start h-auto py-2 px-3 mb-1">
+                          <Settings className="mr-2 h-4 w-4" />
+                          Settings
+                        </Button>
+                      </Link>
+                      
+                      <div className="h-px bg-border my-2"></div>
+                      
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start h-auto py-2 px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={handleLogout}
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+                </PopoverContent>
+              </Popover>
+            ) : (
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => navigate("/auth")}
+                className="ml-2"
+              >
+                Sign In
+              </Button>
+            )}
           </nav>
           
           <motion.button 
@@ -208,7 +235,7 @@ const Header = () => {
                 </motion.div>
               ))}
               
-              {/* Profile Option in Mobile Menu */}
+              {/* User Authentication in Mobile Menu */}
               <motion.div
                 variants={{
                   hidden: { opacity: 0, y: 20 },
@@ -220,38 +247,54 @@ const Header = () => {
                 }}
               >
                 <div className="mt-4 border-t border-border pt-4">
-                  <div className="text-sm font-medium text-muted-foreground mb-2 px-4">Profile Options</div>
-                  
-                  <Link 
-                    to="/profile"
-                    className="flex items-center p-4 rounded-xl text-muted-foreground hover:bg-secondary/50"
-                  >
-                    <UserCircle2 className="h-5 w-5 mr-3" />
-                    <span>View Profile</span>
-                  </Link>
-                  
-                  <Link 
-                    to="/profile/edit"
-                    className="flex items-center p-4 rounded-xl text-muted-foreground hover:bg-secondary/50"
-                  >
-                    <Edit className="h-5 w-5 mr-3" />
-                    <span>Edit Profile</span>
-                  </Link>
-                  
-                  <Link 
-                    to="/settings"
-                    className="flex items-center p-4 rounded-xl text-muted-foreground hover:bg-secondary/50"
-                  >
-                    <Settings className="h-5 w-5 mr-3" />
-                    <span>Settings</span>
-                  </Link>
-                  
-                  <button 
-                    className="flex items-center p-4 rounded-xl text-destructive hover:bg-destructive/10 w-full"
-                  >
-                    <LogOut className="h-5 w-5 mr-3" />
-                    <span>Logout</span>
-                  </button>
+                  {user ? (
+                    <>
+                      <div className="text-sm font-medium text-muted-foreground mb-2 px-4">
+                        {profile?.user_type === 'expert' ? 'Expert Account' : 'User Account'}
+                      </div>
+                      
+                      <Link 
+                        to="/profile"
+                        className="flex items-center p-4 rounded-xl text-muted-foreground hover:bg-secondary/50"
+                      >
+                        <UserCircle2 className="h-5 w-5 mr-3" />
+                        <span>View Profile</span>
+                      </Link>
+                      
+                      <Link 
+                        to="/profile/edit"
+                        className="flex items-center p-4 rounded-xl text-muted-foreground hover:bg-secondary/50"
+                      >
+                        <Edit className="h-5 w-5 mr-3" />
+                        <span>Edit Profile</span>
+                      </Link>
+                      
+                      <Link 
+                        to="/settings"
+                        className="flex items-center p-4 rounded-xl text-muted-foreground hover:bg-secondary/50"
+                      >
+                        <Settings className="h-5 w-5 mr-3" />
+                        <span>Settings</span>
+                      </Link>
+                      
+                      <button 
+                        className="flex items-center p-4 rounded-xl text-destructive hover:bg-destructive/10 w-full"
+                        onClick={handleLogout}
+                      >
+                        <LogOut className="h-5 w-5 mr-3" />
+                        <span>Logout</span>
+                      </button>
+                    </>
+                  ) : (
+                    <Button 
+                      variant="default" 
+                      className="w-full"
+                      onClick={() => navigate("/auth")}
+                    >
+                      <User className="mr-2 h-5 w-5" />
+                      Sign In / Sign Up
+                    </Button>
+                  )}
                 </div>
               </motion.div>
             </motion.nav>
