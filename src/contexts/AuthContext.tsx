@@ -108,7 +108,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data.user) {
         toast.success("Registration successful! Please check your email for verification.");
-        navigate("/");
+        
+        // Redirect to expert dashboard if signed up as expert
+        if (userType === "expert") {
+          navigate("/expert-dashboard");
+        } else {
+          navigate("/");
+        }
       }
     } catch (error: any) {
       console.error("Error signing up:", error);
