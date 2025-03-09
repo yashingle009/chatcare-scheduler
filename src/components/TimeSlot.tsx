@@ -1,40 +1,29 @@
 
-import React from "react";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { cn } from '@/lib/utils';
 
-interface TimeSlotProps {
+export interface TimeSlotProps {
   time: string;
-  available: boolean;
   selected: boolean;
-  onSelect?: (time: string) => void;
+  disabled?: boolean;
+  onClick?: () => void;
 }
 
-const TimeSlot: React.FC<TimeSlotProps> = ({
-  time,
-  available,
-  selected,
-  onSelect
-}) => {
+const TimeSlot = ({ time, selected, disabled = false, onClick }: TimeSlotProps) => {
   return (
-    <motion.button
+    <button
       className={cn(
-        "py-2.5 px-4 rounded-xl text-sm font-medium transition-all",
-        "border focus-ring",
-        available 
-          ? selected
-            ? "bg-primary text-white border-primary"
-            : "bg-white border-border hover:border-primary/60"
-          : "bg-secondary/30 text-muted-foreground border-border cursor-not-allowed opacity-60"
+        "py-2 px-3 text-sm rounded-md border transition-colors",
+        selected 
+          ? "bg-primary text-primary-foreground border-primary" 
+          : "bg-background border-border hover:border-primary/50",
+        disabled && "opacity-50 cursor-not-allowed hover:border-border"
       )}
-      disabled={!available}
-      onClick={() => onSelect && onSelect(time)}
-      whileHover={available ? { scale: 1.05 } : {}}
-      whileTap={available ? { scale: 0.98 } : {}}
-      transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+      onClick={onClick}
+      disabled={disabled}
     >
       {time}
-    </motion.button>
+    </button>
   );
 };
 

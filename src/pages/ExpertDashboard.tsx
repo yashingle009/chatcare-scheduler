@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -63,14 +62,12 @@ const ExpertDashboard = () => {
     }
   };
   
-  // Mock data for today's schedule
   const todayAppointments = [
     { time: "09:00 AM", client: "John Doe", type: "Financial Planning" },
     { time: "11:30 AM", client: "Alice Brown", type: "Retirement Planning" },
     { time: "3:00 PM", client: "Robert Smith", type: "Investment Review" }
   ];
   
-  // Mock data for booking requests
   const pendingRequests = [
     { 
       id: "1", 
@@ -104,7 +101,6 @@ const ExpertDashboard = () => {
     );
   }
 
-  // If expert profile doesn't exist, show setup prompt
   if (!expertData) {
     return (
       <div className="min-h-screen bg-background">
@@ -171,36 +167,34 @@ const ExpertDashboard = () => {
               </div>
             </div>
             
-            {/* Stats Overview */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <StatCard 
                 title="Total Consultations" 
                 value="24" 
                 info="+4 from last month" 
-                icon={<Users />} 
+                icon={<Users className="h-5 w-5 text-primary" />} 
               />
               <StatCard 
                 title="Today's Sessions" 
                 value="3" 
                 info="2 upcoming" 
-                icon={<Calendar />} 
+                icon={<Calendar className="h-5 w-5 text-primary" />} 
               />
               <StatCard 
                 title="Rating" 
                 value="4.8" 
                 info="From 16 reviews" 
-                icon={<BarChart />} 
+                icon={<BarChart className="h-5 w-5 text-primary" />} 
               />
               <StatCard 
                 title="Earnings" 
                 value="$1,250" 
                 info="This month" 
-                icon={<DollarSign />} 
+                icon={<DollarSign className="h-5 w-5 text-primary" />} 
               />
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Today's Schedule */}
               <Card className="h-full">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <div className="space-y-1">
@@ -235,7 +229,6 @@ const ExpertDashboard = () => {
                 </CardContent>
               </Card>
               
-              {/* Booking Requests */}
               <Card className="h-full">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <div className="space-y-1">
@@ -249,7 +242,6 @@ const ExpertDashboard = () => {
                       {pendingRequests.map((request) => (
                         <RequestCard
                           key={request.id}
-                          id={request.id}
                           client={request.client}
                           service={request.service}
                           date={request.date}

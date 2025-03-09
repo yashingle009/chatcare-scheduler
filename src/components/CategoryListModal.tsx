@@ -1,73 +1,66 @@
 
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { mockCategories } from "@/lib/supabase";
+import { Icons } from "@/components/Icons";
 
-interface CategoryListModalProps {
-  isOpen: boolean;
+export interface CategoryListModalProps {
+  categories?: Array<{
+    id: number;
+    name: string;
+    icon: string;
+    description: string;
+    count: number;
+  }>;
   onClose: () => void;
+  onCategoryClick: (categoryId: number) => void;
 }
 
-const CategoryListModal: React.FC<CategoryListModalProps> = ({ isOpen, onClose }) => {
-  const navigate = useNavigate();
-
-  const handleCategorySelect = (categoryId: number) => {
-    navigate(`/professionals/category/${categoryId}`, { state: { categoryId } });
-    onClose();
-  };
-
+const CategoryListModal = ({ categories = [], onClose, onCategoryClick }: CategoryListModalProps) => {
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          <motion.div
-            className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-          />
-          <motion.div
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-6 z-50 w-full max-w-md max-h-[80vh] overflow-auto"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ type: "spring", damping: 20, stiffness: 300 }}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">Browse Categories</h2>
-              <button 
-                onClick={onClose}
-                className="rounded-full h-8 w-8 flex items-center justify-center hover:bg-muted transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-background rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-auto">
+        <div className="p-6 border-b sticky top-0 bg-background z-10">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold">All Categories</h2>
+            <button 
+              onClick={onClose}
+              className="rounded-full p-2 hover:bg-secondary"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+        
+        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {categories.map((category) => {
+            const IconComponent = Icons[category.icon as keyof typeof Icons] || Icons.default;
             
-            <div className="grid gap-3">
-              {mockCategories.map((category) => (
-                <motion.button
-                  key={category.id}
-                  className="flex items-center p-3 rounded-xl hover:bg-secondary/50 text-left transition-colors"
-                  whileHover={{ x: 5 }}
-                  onClick={() => handleCategorySelect(category.id)}
-                >
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-4">
-                    <span className="text-primary">{category.icon}</span>
+            return (
+              <div 
+                key={category.id}
+                onClick={() => {
+                  onCategoryClick(category.id);
+                  onClose();
+                }}
+                className="flex items-start p-3 rounded-lg hover:bg-secondary/50 cursor-pointer"
+              >
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-3 flex-shrink-0">
+                  <IconComponent className="h-5 w-5 text-primary" />
+                </div>
+                
+                <div>
+                  <h3 className="font-medium">{category.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{category.description}</p>
+                  <div className="text-xs text-muted-foreground mt-2">
+                    {category.count} experts available
                   </div>
-                  <div>
-                    <div className="font-medium">{category.name}</div>
-                    <div className="text-xs text-muted-foreground">{category.count} professionals</div>
-                  </div>
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 };
 
