@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -7,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
   User, BookOpen, Languages, Upload, DollarSign, 
-  CheckCircle, Clock, Save, Award
+  CheckCircle, Clock, Save, Award, Image
 } from "lucide-react";
 import Header from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,6 +46,8 @@ const ExpertProfile = () => {
     chat: false,
   });
   const [profileExists, setProfileExists] = useState(false);
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -127,6 +128,50 @@ const ExpertProfile = () => {
     setConsultationModes(prev => ({ ...prev, [mode]: !prev[mode] }));
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setProfileImage(file);
+      
+      // Create image preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadProfileImage = async (userId: string): Promise<string | null> => {
+    if (!profileImage) return null;
+    
+    try {
+      // Create a unique file path for the image
+      const fileExt = profileImage.name.split('.').pop();
+      const filePath = `expert-profiles/${userId}/profile-${Date.now()}.${fileExt}`;
+      
+      // Upload the image to Storage
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, profileImage);
+      
+      if (uploadError) {
+        throw uploadError;
+      }
+      
+      // Get the public URL for the uploaded image
+      const { data } = supabase.storage
+        .from('profiles')
+        .getPublicUrl(filePath);
+      
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      toast.error('Failed to upload profile image');
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -134,9 +179,20 @@ const ExpertProfile = () => {
     try {
       setIsSubmitting(true);
 
+      // Upload profile image if provided
+      let avatarUrl = null;
+      if (profileImage) {
+        avatarUrl = await uploadProfileImage(user.id);
+      }
+
       // Update the user type to 'expert' if it's not already
       if (profile?.user_type !== 'expert') {
         await updateProfile({ user_type: 'expert' });
+      }
+
+      // If image was uploaded, update the user's avatar_url
+      if (avatarUrl) {
+        await updateProfile({ avatar_url: avatarUrl });
       }
 
       // Prepare expert data
@@ -228,6 +284,50 @@ const ExpertProfile = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                      <div className="space-y-4">
+                        <Label className="block mb-2">Profile Image</Label>
+                        <div className="flex items-start space-x-4">
+                          <div className="flex-shrink-0">
+                            <div className="h-24 w-24 rounded-full overflow-hidden bg-secondary flex items-center justify-center border">
+                              {imagePreview ? (
+                                <img 
+                                  src={imagePreview} 
+                                  alt="Profile preview" 
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : profile?.avatar_url ? (
+                                <img 
+                                  src={profile.avatar_url} 
+                                  alt="Profile" 
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <User className="h-12 w-12 text-muted-foreground" />
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex-grow space-y-2">
+                            <Label htmlFor="profile-image" className="cursor-pointer">
+                              <div className="px-4 py-2 bg-secondary rounded-md inline-flex items-center space-x-2 hover:bg-secondary/80 transition-colors">
+                                <Image className="h-4 w-4" />
+                                <span>Choose Image</span>
+                              </div>
+                              <Input 
+                                id="profile-image" 
+                                type="file" 
+                                accept="image/*"
+                                className="hidden" 
+                                onChange={handleImageChange}
+                              />
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                              Upload a professional photo for your profile. <br />
+                              Recommended: Square image, at least 300x300 pixels.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <Label htmlFor="title">Professional Title</Label>
