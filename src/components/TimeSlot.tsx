@@ -6,10 +6,18 @@ export interface TimeSlotProps {
   time: string;
   selected: boolean;
   disabled?: boolean;
+  available?: boolean;
   onClick?: () => void;
+  onSelect?: (time: string) => void;
 }
 
-const TimeSlot = ({ time, selected, disabled = false, onClick }: TimeSlotProps) => {
+const TimeSlot = ({ time, selected, disabled = false, available = true, onClick, onSelect }: TimeSlotProps) => {
+  const handleClick = () => {
+    if (disabled) return;
+    if (onClick) onClick();
+    if (onSelect) onSelect(time);
+  };
+
   return (
     <button
       className={cn(
@@ -17,10 +25,11 @@ const TimeSlot = ({ time, selected, disabled = false, onClick }: TimeSlotProps) 
         selected 
           ? "bg-primary text-primary-foreground border-primary" 
           : "bg-background border-border hover:border-primary/50",
+        !available && "opacity-50 cursor-not-allowed hover:border-border",
         disabled && "opacity-50 cursor-not-allowed hover:border-border"
       )}
-      onClick={onClick}
-      disabled={disabled}
+      onClick={handleClick}
+      disabled={disabled || !available}
     >
       {time}
     </button>

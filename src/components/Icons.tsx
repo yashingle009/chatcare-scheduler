@@ -3,10 +3,11 @@ import React from "react";
 import { 
   Briefcase, Calculator, BookOpen, Heart, Users, ShieldCheck, 
   Building, Palette, GraduationCap, Leaf, Globe, Home,
-  Wallet, Cpu, BookText, Icon
+  Wallet, Cpu, BookText, type LucideIcon 
 } from "lucide-react";
 
-export const Icons: Record<string, React.FC<React.ComponentProps<typeof Icon>>> = {
+// Define the Icons record with proper typing
+export const Icons: Record<string, LucideIcon> = {
   finance: Wallet,
   calculator: Calculator,
   health: Heart,

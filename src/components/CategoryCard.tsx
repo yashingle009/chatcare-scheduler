@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { LucideIcon } from "lucide-react";
 import { Icons } from "@/components/Icons";
 
 export interface CategoryCardProps {
