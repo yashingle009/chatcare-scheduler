@@ -12,6 +12,9 @@ import ProfessionalsByCategory from "./pages/ProfessionalsByCategory";
 import FindProfessionals from "./pages/FindProfessionals";
 import ProfessionalDetail from "./pages/ProfessionalDetail";
 import ExpertDashboard from "./pages/ExpertDashboard";
+import ExpertProfile from "./pages/ExpertProfile";
+import ExpertAvailability from "./pages/ExpertAvailability";
+import ExpertBookings from "./pages/ExpertBookings";
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
@@ -37,6 +40,21 @@ const App = () => (
             <Route path="/expert-dashboard" element={
               <ProtectedRoute>
                 <ExpertDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/expert-profile" element={
+              <ProtectedRoute>
+                <ExpertProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/expert-availability" element={
+              <ProtectedRoute>
+                <ExpertAvailability />
+              </ProtectedRoute>
+            } />
+            <Route path="/expert-bookings" element={
+              <ProtectedRoute>
+                <ExpertBookings />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

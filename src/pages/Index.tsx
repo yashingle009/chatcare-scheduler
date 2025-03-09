@@ -1,217 +1,296 @@
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Calendar, MessageCircle, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Search, ArrowRight, FileCheck, CheckCircle, ArrowDown, Star, Users } from "lucide-react";
 import Header from "@/components/Header";
-import CategoryCard from "@/components/CategoryCard";
-import AnimatedButton from "@/components/AnimatedButton";
-import CategoryListModal from "@/components/CategoryListModal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { mockCategories } from "@/lib/supabase";
-import { staggerContainer, staggerItems } from "@/utils/animations";
+import CategoryCard from "@/components/CategoryCard";
+import CategoryListModal from "@/components/CategoryListModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-const Index = () => {
+const CTASection = () => {
   const navigate = useNavigate();
-  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
-  const { user } = useAuth();
   
-  const handleCategoryClick = (categoryId) => {
-    setCategoryModalOpen(true);
+  return (
+    <motion.div 
+      className="pt-32 pb-20 px-6 md:px-10 lg:px-16 bg-gradient-to-b from-primary/5 to-background text-center"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+    >
+      <motion.h1 
+        className="text-4xl md:text-5xl font-bold tracking-tight max-w-3xl mx-auto"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8, delay: 0.1 }}
+      >
+        Connect with Professional Experts for Personalized Consultations
+      </motion.h1>
+      
+      <motion.p 
+        className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+      >
+        Find, book, and connect with qualified professionals across various fields for specialized advice tailored to your needs.
+      </motion.p>
+      
+      <motion.div 
+        className="mt-8 max-w-xl mx-auto flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+      >
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+          <Input 
+            className="w-full pl-10 py-6 text-base" 
+            placeholder="Search by expertise or professional name..." 
+          />
+        </div>
+        <Button 
+          size="lg"
+          className="w-full sm:w-auto whitespace-nowrap"
+          onClick={() => navigate("/professionals")}
+        >
+          Find Experts <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </motion.div>
+      
+      <motion.div 
+        className="mt-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+      >
+        <div className="flex items-center justify-center">
+          <ArrowDown className="animate-bounce h-6 w-6 text-muted-foreground" />
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+const BecomeExpertSection = () => {
+  const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  
+  const handleBecomeExpert = async () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    
+    if (profile?.user_type === "expert") {
+      navigate("/expert-dashboard");
+      return;
+    }
+    
+    navigate("/expert-profile");
   };
   
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      <CategoryListModal 
-        isOpen={categoryModalOpen} 
-        onClose={() => setCategoryModalOpen(false)} 
-      />
-      
-      <main className="pt-28 pb-16 px-6">
-        <section className="max-w-6xl mx-auto mb-16 md:mb-24">
-          <motion.div
-            className="text-center max-w-3xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-          >
-            <motion.div 
-              className="flex items-center justify-center mb-3"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1], delay: 0.2 }}
-            >
-              <span className="px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                Professional consultations made simple
-              </span>
-            </motion.div>
-            
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-              Expert guidance when you need it most
-            </h1>
-            
-            <p className="text-lg text-muted-foreground mb-8 md:mb-10">
-              Connect with top chartered accountants, lawyers, and company secretaries for personalized professional consultations.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <AnimatedButton 
-                onClick={() => navigate("/professionals")}
-                icon={<Search className="h-4 w-4" />}
-                size="lg"
-              >
-                Find a Professional
-              </AnimatedButton>
-              
-              {user ? (
-                <AnimatedButton 
-                  variant="outline"
-                  size="lg"
-                  onClick={() => navigate("/profile")}
-                >
-                  View Profile
-                </AnimatedButton>
-              ) : (
-                <AnimatedButton 
-                  variant="outline"
-                  size="lg"
-                  onClick={() => navigate("/auth")}
-                >
-                  Sign In / Register
-                </AnimatedButton>
-              )}
-            </div>
-          </motion.div>
-        </section>
-        
-        <section className="max-w-6xl mx-auto mb-16 md:mb-24">
-          <motion.div
-            className="text-center mb-10"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1], delay: 0.2 }}
-          >
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Browse by Expertise</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Choose from a variety of professional categories to find the right expert for your needs
-            </p>
-          </motion.div>
+    <motion.div 
+      className="py-20 px-6 bg-primary/5 rounded-3xl mx-6 my-16"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+      viewport={{ once: true }}
+    >
+      <div className="max-w-4xl mx-auto text-center">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          whileInView={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+        >
+          <Users className="h-12 w-12 mx-auto mb-6 text-primary" />
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Want to Share Your Expertise?
+          </h2>
+          <p className="text-xl text-muted-foreground mb-6">
+            Join our platform as an expert and start offering professional consultations to clients worldwide.
+          </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {mockCategories.map((category) => (
-              <CategoryCard
-                key={category.id}
-                id={category.id}
-                name={category.name}
-                icon={category.icon}
-                description={category.description}
-                count={category.count}
-                onClick={() => handleCategoryClick(category.id)}
-              />
-            ))}
+          <div className="flex flex-wrap justify-center gap-6 mb-8">
+            <div className="flex items-start">
+              <CheckCircle className="h-5 w-5 text-primary mt-1 mr-2 flex-shrink-0" />
+              <span>Flexible scheduling</span>
+            </div>
+            <div className="flex items-start">
+              <CheckCircle className="h-5 w-5 text-primary mt-1 mr-2 flex-shrink-0" />
+              <span>Set your own rates</span>
+            </div>
+            <div className="flex items-start">
+              <CheckCircle className="h-5 w-5 text-primary mt-1 mr-2 flex-shrink-0" />
+              <span>Reach global clients</span>
+            </div>
+            <div className="flex items-start">
+              <CheckCircle className="h-5 w-5 text-primary mt-1 mr-2 flex-shrink-0" />
+              <span>Build your reputation</span>
+            </div>
           </div>
-        </section>
-        
-        <section className="max-w-6xl mx-auto mb-16 md:mb-24">
-          <motion.div
-            className="text-center mb-10"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1], delay: 0.3 }}
+          
+          <Button 
+            size="lg" 
+            onClick={handleBecomeExpert}
+            className="px-8"
           >
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">How It Works</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Simple steps to get the professional guidance you need
+            {profile?.user_type === "expert" ? "Go to Expert Dashboard" : "Become an Expert"}
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </motion.div>
+      </div>
+    </motion.div>
+  );
+};
+
+const FeaturedCategories = () => {
+  const navigate = useNavigate();
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  
+  const handleCategoryClick = (categoryId: number) => {
+    navigate(`/professionals/category/${categoryId}`, { state: { categoryId } });
+  };
+  
+  const featuredCategories = mockCategories.slice(0, 6);
+  
+  return (
+    <motion.div 
+      className="py-16 px-6"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true }}
+    >
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-10">
+          <div>
+            <h2 className="text-3xl font-bold mb-4">Browse by Category</h2>
+            <p className="text-muted-foreground max-w-2xl">
+              Explore professionals by category to find the perfect match for your specific needs
+            </p>
+          </div>
+          <Button 
+            variant="link" 
+            className="mt-4 md:mt-0"
+            onClick={() => setShowAllCategories(true)}
+          >
+            View All Categories
+            <ArrowRight className="ml-1 h-4 w-4" />
+          </Button>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {featuredCategories.map((category) => (
+            <CategoryCard 
+              key={category.id}
+              id={category.id}
+              name={category.name}
+              description={category.description}
+              icon={category.icon}
+              onClick={() => handleCategoryClick(category.id)}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {showAllCategories && (
+        <CategoryListModal 
+          categories={mockCategories}
+          onClose={() => setShowAllCategories(false)}
+          onCategoryClick={handleCategoryClick}
+        />
+      )}
+    </motion.div>
+  );
+};
+
+const HowItWorks = () => {
+  return (
+    <motion.div 
+      className="py-16 px-6 bg-secondary/20"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true }}
+    >
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold mb-4">How It Works</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Connect with professionals in just a few simple steps
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          <motion.div 
+            className="flex flex-col items-center text-center"
+            initial={{ y: 20, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            viewport={{ once: true }}
+          >
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+              <Search className="h-8 w-8 text-primary" />
+            </div>
+            <h3 className="text-xl font-medium mb-3">Find an Expert</h3>
+            <p className="text-muted-foreground">
+              Browse categories or search for the specific expertise you need. Filter by ratings, availability, and specialization.
             </p>
           </motion.div>
           
           <motion.div 
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
-            variants={staggerContainer}
-            initial="initial"
-            animate="animate"
+            className="flex flex-col items-center text-center"
+            initial={{ y: 20, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            viewport={{ once: true }}
           >
-            <motion.div 
-              className="bg-white rounded-2xl p-6 border border-border text-center"
-              variants={staggerItems}
-            >
-              <div className="h-14 w-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-5">
-                <Search className="h-6 w-6" />
-              </div>
-              <h3 className="text-lg font-medium mb-3">Find an Expert</h3>
-              <p className="text-sm text-muted-foreground">
-                Browse through our directory of verified professionals and select one that matches your needs.
-              </p>
-            </motion.div>
-            
-            <motion.div 
-              className="bg-white rounded-2xl p-6 border border-border text-center"
-              variants={staggerItems}
-            >
-              <div className="h-14 w-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-5">
-                <Calendar className="h-6 w-6" />
-              </div>
-              <h3 className="text-lg font-medium mb-3">Book a Session</h3>
-              <p className="text-sm text-muted-foreground">
-                Choose a convenient time slot from the professional's calendar and schedule your consultation.
-              </p>
-            </motion.div>
-            
-            <motion.div 
-              className="bg-white rounded-2xl p-6 border border-border text-center"
-              variants={staggerItems}
-            >
-              <div className="h-14 w-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-5">
-                <MessageCircle className="h-6 w-6" />
-              </div>
-              <h3 className="text-lg font-medium mb-3">Get Consultation</h3>
-              <p className="text-sm text-muted-foreground">
-                Connect via video, voice, or chat for personalized advice and guidance from your chosen expert.
-              </p>
-            </motion.div>
-          </motion.div>
-        </section>
-        
-        <section className="max-w-6xl mx-auto">
-          <motion.div
-            className="bg-white rounded-2xl border border-border p-8 md:p-10"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1], delay: 0.4 }}
-          >
-            <div className="flex flex-col md:flex-row md:items-center">
-              <div className="md:flex-1 mb-6 md:mb-0 md:pr-10">
-                <div className="flex items-center mb-3">
-                  <Award className="h-5 w-5 text-primary mr-2" />
-                  <h4 className="text-sm font-medium">Premium Consultations</h4>
-                </div>
-                <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to get started?</h2>
-                <p className="text-muted-foreground mb-6 md:mb-0">
-                  Book your first consultation and experience the difference of professional guidance tailored to your needs.
-                </p>
-              </div>
-              <div className="md:flex-initial">
-                {user ? (
-                  <AnimatedButton
-                    onClick={() => navigate("/profile")}
-                    size="lg"
-                  >
-                    View Your Profile
-                  </AnimatedButton>
-                ) : (
-                  <AnimatedButton
-                    onClick={() => navigate("/professionals")}
-                    size="lg"
-                  >
-                    Find a Professional
-                  </AnimatedButton>
-                )}
-              </div>
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+              <FileCheck className="h-8 w-8 text-primary" />
             </div>
+            <h3 className="text-xl font-medium mb-3">Book a Session</h3>
+            <p className="text-muted-foreground">
+              Select an available time slot, choose your preferred consultation mode (video, audio, or chat), and confirm your booking.
+            </p>
           </motion.div>
-        </section>
-      </main>
+          
+          <motion.div 
+            className="flex flex-col items-center text-center"
+            initial={{ y: 20, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            viewport={{ once: true }}
+          >
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+              <Star className="h-8 w-8 text-primary" />
+            </div>
+            <h3 className="text-xl font-medium mb-3">Get Personalized Advice</h3>
+            <p className="text-muted-foreground">
+              Connect with your expert at the scheduled time. Receive tailored advice, ask questions, and get the guidance you need.
+            </p>
+          </motion.div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const Index = () => {
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <CTASection />
+      <FeaturedCategories />
+      <HowItWorks />
+      <BecomeExpertSection />
     </div>
   );
 };
