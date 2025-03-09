@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { UserCircle2, Calendar, Home, Menu, X, Search, Settings, Edit, LogOut, User } from "lucide-react";
+import { UserCircle2, Calendar, Home, Menu, X, Search, Settings, Edit, LogOut, User, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,7 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, isAdmin, signOut } = useAuth();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -33,6 +32,14 @@ const Header = () => {
     { name: "Find Professionals", path: "/professionals", icon: <Search className="h-5 w-5" /> },
     { name: "My Bookings", path: "/bookings", icon: <Calendar className="h-5 w-5" /> }
   ];
+  
+  if (isAdmin) {
+    navItems.push({ 
+      name: "Admin Dashboard", 
+      path: "/admin-dashboard", 
+      icon: <Shield className="h-5 w-5" /> 
+    });
+  }
   
   const isActive = (path: string) => {
     if (path === "/profile" && location.pathname.startsWith("/profile")) {
@@ -91,7 +98,6 @@ const Header = () => {
               </Link>
             ))}
             
-            {/* Profile Popover */}
             {user ? (
               <Popover>
                 <PopoverTrigger asChild>
@@ -235,68 +241,65 @@ const Header = () => {
                 </motion.div>
               ))}
               
-              {/* User Authentication in Mobile Menu */}
-              <motion.div
-                variants={{
-                  hidden: { opacity: 0, y: 20 },
-                  show: { 
-                    opacity: 1, 
-                    y: 0,
-                    transition: { duration: 0.4, ease: [0.23, 1, 0.32, 1] }
-                  }
-                }}
-              >
-                <div className="mt-4 border-t border-border pt-4">
-                  {user ? (
-                    <>
-                      <div className="text-sm font-medium text-muted-foreground mb-2 px-4">
-                        {profile?.user_type === 'expert' ? 'Expert Account' : 'User Account'}
-                      </div>
-                      
-                      <Link 
-                        to="/profile"
-                        className="flex items-center p-4 rounded-xl text-muted-foreground hover:bg-secondary/50"
-                      >
-                        <UserCircle2 className="h-5 w-5 mr-3" />
-                        <span>View Profile</span>
-                      </Link>
-                      
-                      <Link 
-                        to="/profile/edit"
-                        className="flex items-center p-4 rounded-xl text-muted-foreground hover:bg-secondary/50"
-                      >
-                        <Edit className="h-5 w-5 mr-3" />
-                        <span>Edit Profile</span>
-                      </Link>
-                      
-                      <Link 
-                        to="/settings"
-                        className="flex items-center p-4 rounded-xl text-muted-foreground hover:bg-secondary/50"
-                      >
-                        <Settings className="h-5 w-5 mr-3" />
-                        <span>Settings</span>
-                      </Link>
-                      
-                      <button 
-                        className="flex items-center p-4 rounded-xl text-destructive hover:bg-destructive/10 w-full"
-                        onClick={handleLogout}
-                      >
-                        <LogOut className="h-5 w-5 mr-3" />
-                        <span>Logout</span>
-                      </button>
-                    </>
-                  ) : (
-                    <Button 
-                      variant="default" 
-                      className="w-full"
-                      onClick={() => navigate("/auth")}
+              {user ? (
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    show: { 
+                      opacity: 1, 
+                      y: 0,
+                      transition: { duration: 0.4, ease: [0.23, 1, 0.32, 1] }
+                    }
+                  }}
+                >
+                  <div className="mt-4 border-t border-border pt-4">
+                    <div className="text-sm font-medium text-muted-foreground mb-2 px-4">
+                      {profile?.user_type === 'expert' ? 'Expert Account' : 'User Account'}
+                    </div>
+                    
+                    <Link 
+                      to="/profile"
+                      className="flex items-center p-4 rounded-xl text-muted-foreground hover:bg-secondary/50"
                     >
-                      <User className="mr-2 h-5 w-5" />
-                      Sign In / Sign Up
-                    </Button>
-                  )}
-                </div>
-              </motion.div>
+                      <UserCircle2 className="h-5 w-5 mr-3" />
+                      <span>View Profile</span>
+                    </Link>
+                    
+                    <Link 
+                      to="/profile/edit"
+                      className="flex items-center p-4 rounded-xl text-muted-foreground hover:bg-secondary/50"
+                    >
+                      <Edit className="h-5 w-5 mr-3" />
+                      <span>Edit Profile</span>
+                    </Link>
+                    
+                    <Link 
+                      to="/settings"
+                      className="flex items-center p-4 rounded-xl text-muted-foreground hover:bg-secondary/50"
+                    >
+                      <Settings className="h-5 w-5 mr-3" />
+                      <span>Settings</span>
+                    </Link>
+                    
+                    <button 
+                      className="flex items-center p-4 rounded-xl text-destructive hover:bg-destructive/10 w-full"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="h-5 w-5 mr-3" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                <Button 
+                  variant="default" 
+                  className="w-full"
+                  onClick={() => navigate("/auth")}
+                >
+                  <User className="mr-2 h-5 w-5" />
+                  Sign In / Sign Up
+                </Button>
+              )}
             </motion.nav>
           </motion.div>
         )}

@@ -3,7 +3,7 @@ import React from "react";
 import { 
   Briefcase, Calculator, BookOpen, Heart, Users, ShieldCheck, 
   Building, Palette, GraduationCap, Leaf, Globe, Home,
-  Wallet, Cpu, BookText, type LucideIcon 
+  Wallet, Cpu, BookText, Shield, type LucideIcon 
 } from "lucide-react";
 
 // Define the Icons record with proper typing
@@ -23,6 +23,7 @@ export const Icons: Record<string, LucideIcon> = {
   international: Globe,
   realestate: Home,
   general: BookText,
+  admin: Shield,
   default: BookText
 };
 

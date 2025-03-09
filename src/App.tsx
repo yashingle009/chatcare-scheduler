@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ProfessionalsByCategory from "./pages/ProfessionalsByCategory";
@@ -15,6 +16,7 @@ import ExpertDashboard from "./pages/ExpertDashboard";
 import ExpertProfile from "./pages/ExpertProfile";
 import ExpertAvailability from "./pages/ExpertAvailability";
 import ExpertBookings from "./pages/ExpertBookings";
+import AdminDashboard from "./pages/AdminDashboard";
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
@@ -57,6 +59,14 @@ const App = () => (
                 <ExpertBookings />
               </ProtectedRoute>
             } />
+            
+            {/* Admin Routes */}
+            <Route path="/admin-dashboard" element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            } />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

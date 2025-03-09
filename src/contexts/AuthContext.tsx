@@ -10,6 +10,7 @@ interface UserProfile {
   first_name: string;
   last_name: string;
   user_type: "user" | "expert";
+  role: "user" | "expert" | "admin";
   avatar_url?: string;
   bio?: string;
 }
@@ -19,6 +20,7 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
+  isAdmin: boolean;
   signUp: (email: string, password: string, userType: "user" | "expert") => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -32,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -80,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data) {
         setProfile(data as UserProfile);
+        setIsAdmin(data.role === 'admin');
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -213,6 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     profile,
     loading,
+    isAdmin,
     signUp,
     signIn,
     signOut,
