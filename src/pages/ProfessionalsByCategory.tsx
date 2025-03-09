@@ -39,37 +39,64 @@ const ProfessionalsByCategory = () => {
     try {
       setLoading(true);
       
-      // Fetch professionals with related profile data
-      const { data, error } = await supabase
+      // First fetch experts by category
+      const { data: expertsData, error: expertsError } = await supabase
         .from('experts')
-        .select(`
-          *,
-          profiles:id (first_name, last_name, avatar_url)
-        `)
+        .select('*')
         .eq('category_id', categoryId);
 
-      if (error) {
-        console.error("Error fetching professionals:", error);
+      if (expertsError) {
+        console.error("Error fetching professionals:", expertsError);
         toast.error("Failed to load professionals");
         setProfessionals([]);
-      } else {
-        // Transform data for component
-        const transformedData = data.map(expert => ({
-          id: expert.id,
-          name: `${expert.profiles.first_name} ${expert.profiles.last_name}`,
-          title: expert.title || "Professional Consultant",
-          avatar: expert.profiles.avatar_url || "/placeholder.svg",
-          rating: 4.5, // Placeholder, would be from a reviews table in real app
-          reviewCount: 15, // Placeholder, would be counted from reviews
-          experience: expert.experience || "5+ years",
-          price: expert.price || 100,
-          availableToday: true, // Placeholder, would be from availability data
-          location: expert.location || "Remote",
-          categoryId: expert.category_id
-        }));
-        
-        setProfessionals(transformedData);
+        setLoading(false);
+        return;
       }
+
+      // For each expert, get their profile data
+      const professionalData = await Promise.all(
+        expertsData.map(async (expert) => {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', expert.id)
+            .single();
+
+          if (profileError) {
+            console.error(`Error fetching profile for expert ${expert.id}:`, profileError);
+            // Return expert with placeholder profile data
+            return {
+              id: expert.id,
+              name: 'Unnamed Professional',
+              title: expert.title || "Professional Consultant",
+              avatar: "/placeholder.svg",
+              rating: 4.5, // Placeholder
+              reviewCount: 15, // Placeholder
+              experience: expert.experience || "5+ years",
+              price: expert.price || 100,
+              availableToday: true, // Placeholder
+              location: expert.location || "Remote",
+              categoryId: expert.category_id
+            };
+          }
+
+          return {
+            id: expert.id,
+            name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Unnamed Professional',
+            title: expert.title || "Professional Consultant",
+            avatar: profileData.avatar_url || "/placeholder.svg",
+            rating: 4.5, // Placeholder
+            reviewCount: 15, // Placeholder
+            experience: expert.experience || "5+ years",
+            price: expert.price || 100,
+            availableToday: true, // Placeholder
+            location: expert.location || "Remote",
+            categoryId: expert.category_id
+          };
+        })
+      );
+      
+      setProfessionals(professionalData);
     } catch (err) {
       console.error("Error in fetching professionals:", err);
       toast.error("An error occurred while loading professionals");

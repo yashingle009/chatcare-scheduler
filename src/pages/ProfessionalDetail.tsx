@@ -65,13 +65,10 @@ const ProfessionalDetail = () => {
         return;
       }
       
-      // Fetch expert data with related profile data
+      // First fetch the expert data
       const { data: expertData, error: expertError } = await supabase
         .from('experts')
-        .select(`
-          *,
-          profiles:id (first_name, last_name, avatar_url, bio)
-        `)
+        .select('*')
         .eq('id', professionalId)
         .single();
       
@@ -82,20 +79,31 @@ const ProfessionalDetail = () => {
         return;
       }
       
-      // Set profile data
-      const profileInfo = expertData.profiles;
-      setProfileData(profileInfo);
+      // Then fetch the corresponding profile data
+      const { data: profileInfo, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', expertData.id)
+        .single();
+      
+      if (profileError) {
+        console.error("Error fetching profile data:", profileError);
+        // Continue with limited profile data
+        setProfileData(null);
+      } else {
+        setProfileData(profileInfo);
+      }
       
       // Transform expert data for component
       const professionalData = {
         id: expertData.id,
-        name: `${profileInfo.first_name || ''} ${profileInfo.last_name || ''}`.trim() || 'Unnamed Professional',
+        name: profileInfo ? `${profileInfo.first_name || ''} ${profileInfo.last_name || ''}`.trim() : 'Unnamed Professional',
         title: expertData.title || "Professional Consultant",
-        avatar: profileInfo.avatar_url || "/placeholder.svg",
+        avatar: profileInfo?.avatar_url || "/placeholder.svg",
         rating: 4.8, // Placeholder
         reviewCount: 24, // Placeholder
         experience: expertData.experience || "5+ years experience",
-        bio: profileInfo.bio || expertData.bio || "No bio available",
+        bio: profileInfo?.bio || expertData.bio || "No bio available",
         location: expertData.location || "Remote",
         languages: expertData.languages || ["English"],
         specializations: expertData.specializations || ["Consulting"],
