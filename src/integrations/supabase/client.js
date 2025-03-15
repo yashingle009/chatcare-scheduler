@@ -1,7 +1,44 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = "https://tkbiywqauihzpwebewma.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrYml5d3FhdWloenB3ZWJld21hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyMDI5NjIsImV4cCI6MjA1NTc3ODk2Mn0.PAQ6ojB3UMQwiswR0EPKD2YmnyjVA7rnylv8YszHPRI";
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project-url.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export const getProfile = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    return null;
+  }
+};
+
+export const updateProfile = async (userId, updates) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId);
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    return { success: false, error: error.message };
+  }
+};
