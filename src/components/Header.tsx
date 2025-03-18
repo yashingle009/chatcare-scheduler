@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -68,7 +69,7 @@ const Header = () => {
               transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
               className="text-xl font-semibold tracking-tight"
             >
-              ConsultEase
+              ConsultSphere
             </motion.div>
           </Link>
           
