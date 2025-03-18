@@ -9,7 +9,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import ProfessionalsByCategory from "./pages/ProfessionalsByCategory";
+import ProfessionalsByCategory from "./pages/ProfessionalsByCategory.tsx";
 import FindProfessionals from "./pages/FindProfessionals";
 import ProfessionalDetail from "./pages/ProfessionalDetail";
 import ExpertDashboard from "./pages/ExpertDashboard";
